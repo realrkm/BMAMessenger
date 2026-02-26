@@ -246,7 +246,16 @@ class SmsViewModel(private val settingsManager: SettingsManager) : ViewModel() {
     fun generateAndSendPdf(context: Context, msg: SmsMessage) {
         viewModelScope.launch {
             try {
-                val responseBody = api?.generatePdf(msg.jobcardrefid)
+                // The backend now expects both the job card id and selected document.
+                val selectedDocument = msg.document?.trim().orEmpty()
+                if (selectedDocument.isBlank()) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "No document type selected for this message.", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+
+                val responseBody = api?.generatePdf(msg.jobcardrefid, selectedDocument)
                 if (responseBody == null || responseBody.contentLength() == 0L) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(context, "No relevant document to attach.", Toast.LENGTH_SHORT).show()
@@ -256,7 +265,9 @@ class SmsViewModel(private val settingsManager: SettingsManager) : ViewModel() {
 
                 responseBody.let { body ->
                     withContext(Dispatchers.IO) {
-                        val file = File(context.cacheDir, "invoice.pdf")
+                        // File name now mirrors the document value from the API payload.
+                        val pdfFileName = toPdfFileName(selectedDocument)
+                        val file = File(context.cacheDir, pdfFileName)
                         try {
                             body.byteStream().use { inputStream ->
                                 FileOutputStream(file).use { outputStream ->
@@ -286,6 +297,16 @@ class SmsViewModel(private val settingsManager: SettingsManager) : ViewModel() {
                 }
             }
         }
+    }
+
+    /**
+     * Converts a document label into a safe filename and ensures the file ends with .pdf.
+     */
+    private fun toPdfFileName(documentValue: String): String {
+        val cleaned = documentValue.trim()
+            .replace(Regex("[\\\\/:*?\"<>|]"), "_")
+            .ifEmpty { "document" }
+        return if (cleaned.lowercase().endsWith(".pdf")) cleaned else "$cleaned.pdf"
     }
 
     /**

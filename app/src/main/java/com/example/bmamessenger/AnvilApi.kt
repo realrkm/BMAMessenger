@@ -7,6 +7,7 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 import retrofit2.http.Streaming
 
 data class LoginUser(
@@ -52,9 +53,13 @@ interface AnvilApi {
      * Generates a PDF document for a given job card ID.
      *
      * @param jobCardId The unique identifier of the job card.
+     * @param document The selected document label/type (Invoice, Confirm, Quote, etc).
      * @return A [ResponseBody] containing the PDF file.
      */
     @Streaming
     @GET("_/api/generate-pdf/{jobcardid}")
-    suspend fun generatePdf(@Path("jobcardid") jobCardId: Int): ResponseBody
+    suspend fun generatePdf(
+        @Path("jobcardid") jobCardId: Int,
+        @Query("document") document: String
+    ): ResponseBody
 }
