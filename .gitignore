@@ -1,0 +1,29 @@
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.gradle/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+cmake-build-*/
+
+# Build Outputs
+build/
+bin/
+gen/
+out/
+keystores/
+
+# Keystore files (NEVER share your signing keys)
+*.jks
+*.keystore
+*.pk8
+*.p12
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment variables (Sensitive Data)
+.env
