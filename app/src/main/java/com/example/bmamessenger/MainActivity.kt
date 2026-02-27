@@ -308,6 +308,13 @@ fun SmsGatewayScreen(viewModel: SmsViewModel, onOpenSettings: () -> Unit, onLogo
  */
 @Composable
 fun ShareDialog(onDismiss: () -> Unit, onSendText: () -> Unit, onSendPdf: () -> Unit) {
+    val isDarkModeEnabled = MaterialTheme.colorScheme.onBackground == Color.White
+    val sendPdfButtonColor = if (isDarkModeEnabled) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.background,
@@ -331,7 +338,7 @@ fun ShareDialog(onDismiss: () -> Unit, onSendText: () -> Unit, onSendPdf: () -> 
                 Button(
                     onClick = onSendPdf,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f))
+                    colors = ButtonDefaults.buttonColors(containerColor = sendPdfButtonColor)
                 ) {
                     Icon(Icons.Filled.PictureAsPdf, contentDescription = "Send with PDF")
                     Spacer(Modifier.width(8.dp))
@@ -370,6 +377,8 @@ fun SmsCard(
     onCancel: () -> Unit,
     onShareWhatsApp: () -> Unit
 ) {
+    val phoneTextColor = if (MaterialTheme.colorScheme.onBackground == Color.White) Color.Gray else Color.Black
+
     Card(
         // Intentionally not clickable: WhatsApp share is only opened from the Share icon.
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -398,7 +407,7 @@ fun SmsCard(
                 // Display the recipient's name and phone number.
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = msg.fullname, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
-                    Text(text = msg.phone, style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
+                    Text(text = msg.phone, style = MaterialTheme.typography.bodyLarge, color = phoneTextColor)
                 }
                 // Display the share button.
                 IconButton(onClick = onShareWhatsApp) {
