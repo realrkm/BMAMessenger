@@ -13,7 +13,7 @@ build/
 bin/
 gen/
 out/
-keystores/
+keystore/
 
 # Keystore files (NEVER share your signing keys)
 *.jks
