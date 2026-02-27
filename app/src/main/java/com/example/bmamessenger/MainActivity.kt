@@ -13,6 +13,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -68,6 +71,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -116,7 +120,7 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     // State to manage the current screen being displayed.
                     // Start with the LOGIN screen as requested.
-                    var currentScreen by remember { mutableStateOf(AppScreen.LOGIN) }
+                    var currentScreen by rememberSaveable { mutableStateOf(AppScreen.LOGIN) }
 
                     // Navigate between screens based on currentScreen state.
                     when (currentScreen) {
@@ -166,6 +170,16 @@ fun SmsGatewayScreen(viewModel: SmsViewModel, onOpenSettings: () -> Unit, onLogo
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val emptyStateIconTint = if (viewModel.isDarkModeEnabled) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+    } else {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+    }
+    val emptyStateTextColor = if (viewModel.isDarkModeEnabled) {
+        Color.Gray
+    } else {
+        MaterialTheme.colorScheme.onBackground
+    }
 
     // Show a toast message if an error occurs.
     val errorMessage = viewModel.errorMessage
@@ -248,9 +262,9 @@ fun SmsGatewayScreen(viewModel: SmsViewModel, onOpenSettings: () -> Unit, onLogo
                 if (viewModel.messages.isEmpty() && !viewModel.isRefreshing) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                            Icon(Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(64.dp), tint = emptyStateIconTint)
                             Spacer(Modifier.height(16.dp))
-                            Text("All messages sent!", style = MaterialTheme.typography.titleMedium, color = Color.Gray)
+                            Text("All messages sent!", style = MaterialTheme.typography.titleMedium, color = emptyStateTextColor)
                         }
                     }
                 } else {
@@ -479,7 +493,15 @@ fun SettingsScreen(viewModel: SmsViewModel, onBack: () -> Unit, onLogout: () -> 
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             // Text field for the Anvil Base URL.
             SettingTextField(
                 value = tempUrl, 

@@ -17,4 +17,4 @@ val White = Color.White
 // A near-white surface color for light mode cards/inputs.
 val LightSurface = Color(0xFFF4F5F8)
 // A standard dark text color for light mode.
-val ColorBlack = Color(0xFF111111)
+val ColorBlack = Color(0xFF000000)
