@@ -42,6 +42,8 @@ class SmsViewModel(private val settingsManager: SettingsManager) : ViewModel() {
     var baseUrl by mutableStateOf("")
     /** The interval in seconds at which to refresh the list of pending SMS messages. */
     var refreshIntervalSeconds by mutableLongStateOf(30L)
+    /** Controls whether the app uses dark theme. */
+    var isDarkModeEnabled by mutableStateOf(true)
     /** The Retrofit API interface for interacting with the Anvil service. */
     private var api: AnvilApi? = null
     /** The coroutine job that handles the automatic refresh of messages. */
@@ -71,6 +73,7 @@ class SmsViewModel(private val settingsManager: SettingsManager) : ViewModel() {
         viewModelScope.launch {
             baseUrl = settingsManager.baseUrlFlow.first()
             refreshIntervalSeconds = settingsManager.intervalFlow.first()
+            isDarkModeEnabled = settingsManager.darkModeFlow.first()
             updateApi()
             startAutomaticRefresh()
         }
@@ -117,7 +120,7 @@ class SmsViewModel(private val settingsManager: SettingsManager) : ViewModel() {
             isLoggingIn = true
             loginErrorMessage = null
             try {
-                settingsManager.saveSettings(trimmedUrl, refreshIntervalSeconds)
+                settingsManager.saveSettings(trimmedUrl, refreshIntervalSeconds, isDarkModeEnabled)
                 baseUrl = trimmedUrl
                 updateApi()
 
@@ -210,11 +213,12 @@ class SmsViewModel(private val settingsManager: SettingsManager) : ViewModel() {
      * @param url The new base URL for the Anvil API.
      * @param interval The new refresh interval in seconds.
      */
-    fun saveAndApplySettings(url: String, interval: Long) {
+    fun saveAndApplySettings(url: String, interval: Long, darkModeEnabled: Boolean) {
         viewModelScope.launch {
-            settingsManager.saveSettings(url, interval)
+            settingsManager.saveSettings(url, interval, darkModeEnabled)
             baseUrl = url
             refreshIntervalSeconds = interval
+            isDarkModeEnabled = darkModeEnabled
             updateApi()
             startAutomaticRefresh()
         }

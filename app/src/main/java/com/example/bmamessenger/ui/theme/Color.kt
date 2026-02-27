@@ -14,3 +14,7 @@ val NightBlue = Color(0xFF1A1A2E)
 val GlassyBlack = Color(0x80000000) // 50% transparent black
 // A solid white color.
 val White = Color.White
+// A near-white surface color for light mode cards/inputs.
+val LightSurface = Color(0xFFF4F5F8)
+// A standard dark text color for light mode.
+val ColorBlack = Color(0xFF111111)

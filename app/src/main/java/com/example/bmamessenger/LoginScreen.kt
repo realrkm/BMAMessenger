@@ -38,8 +38,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bmamessenger.ui.theme.AppTheme
+import com.example.bmamessenger.ui.theme.ColorBlack
 import com.example.bmamessenger.ui.theme.DeepPurple
 import com.example.bmamessenger.ui.theme.GlassyBlack
+import com.example.bmamessenger.ui.theme.LightSurface
 import com.example.bmamessenger.ui.theme.NightBlue
 import com.example.bmamessenger.ui.theme.White
 
@@ -69,6 +71,14 @@ fun LoginScreen(
     var isPasswordVisible by remember { mutableStateOf(false) }
     var localError by remember { mutableStateOf<String?>(null) }
     val shownError = localError ?: errorMessage
+    val isDarkModeEnabled = MaterialTheme.colorScheme.onBackground == White
+    val loginHeaderTextColor = if (isDarkModeEnabled) White else ColorBlack
+    val loginErrorTextColor = if (isDarkModeEnabled) Color(0xFFFFB4AB) else ColorBlack
+    val loginBackgroundGradient = if (isDarkModeEnabled) {
+        listOf(NightBlue, Color(0xFF0B1120))
+    } else {
+        listOf(White, LightSurface)
+    }
 
     val submitLogin = {
         dismissKeyboard(view, keyboardController, focusManager)
@@ -84,13 +94,13 @@ fun LoginScreen(
         }
     }
 
-    // Main container with a dark vertical gradient background
+    // Main container background adapts to dark/light mode.
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(NightBlue, Color(0xFF0B1120))
+                    colors = loginBackgroundGradient
                 )
             )
     ) {
@@ -148,7 +158,7 @@ fun LoginScreen(
             // Header text
             Text(
                 text = "Welcome Back",
-                color = White,
+                color = loginHeaderTextColor,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -156,7 +166,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Sign in to send SMS and WhatsApp messages",
-                color = White,
+                color = loginHeaderTextColor,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center
             )
@@ -279,7 +289,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = shownError,
-                    color = Color(0xFFFFB4AB),
+                    color = loginErrorTextColor,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
                 )

@@ -23,6 +23,7 @@ class SettingsManager(private val context: Context) {
      */
     private val URL_KEY = stringPreferencesKey("anvil_url")
     private val INTERVAL_KEY = longPreferencesKey("refresh_interval")
+    private val DARK_MODE_KEY = booleanPreferencesKey("enable_dark_mode")
 
     /**
      * A flow that emits the base URL of the Anvil service whenever it changes.
@@ -35,15 +36,22 @@ class SettingsManager(private val context: Context) {
     val intervalFlow: Flow<Long> = context.dataStore.data.map { it[INTERVAL_KEY] ?: 30L }
 
     /**
+     * A flow that emits whether dark mode is enabled.
+     * Default is true so the app keeps its current appearance unless user disables it.
+     */
+    val darkModeFlow: Flow<Boolean> = context.dataStore.data.map { it[DARK_MODE_KEY] ?: true }
+
+    /**
      * Saves the provided settings to the DataStore.
      *
      * @param url The base URL of the Anvil service.
      * @param interval The refresh interval in seconds.
      */
-    suspend fun saveSettings(url: String, interval: Long) {
+    suspend fun saveSettings(url: String, interval: Long, darkModeEnabled: Boolean = true) {
         context.dataStore.edit { settings ->
             settings[URL_KEY] = url
             settings[INTERVAL_KEY] = interval
+            settings[DARK_MODE_KEY] = darkModeEnabled
         }
     }
 }

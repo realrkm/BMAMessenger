@@ -55,6 +55,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -103,16 +104,16 @@ class MainActivity : ComponentActivity() {
         val settingsManager = SettingsManager(applicationContext)
 
         setContent {
-            AppTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    // Create the view model, providing it with the settings manager.
-                    val viewModel: SmsViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                            return SmsViewModel(settingsManager) as T
-                        }
-                    })
+            // Create the view model before applying the theme so dark-mode preference can drive AppTheme.
+            val viewModel: SmsViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                    return SmsViewModel(settingsManager) as T
+                }
+            })
 
+            AppTheme(darkTheme = viewModel.isDarkModeEnabled) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     // State to manage the current screen being displayed.
                     // Start with the LOGIN screen as requested.
                     var currentScreen by remember { mutableStateOf(AppScreen.LOGIN) }
@@ -133,15 +134,15 @@ class MainActivity : ComponentActivity() {
                         }
                         AppScreen.MAIN -> {
                             SmsGatewayScreen(
-                                viewModel, 
-                                onOpenSettings = { currentScreen = AppScreen.SETTINGS }, 
+                                viewModel,
+                                onOpenSettings = { currentScreen = AppScreen.SETTINGS },
                                 onLogout = { currentScreen = AppScreen.LOGIN }
                             )
                         }
                         AppScreen.SETTINGS -> {
                             SettingsScreen(
-                                viewModel, 
-                                onBack = { currentScreen = AppScreen.MAIN }, 
+                                viewModel,
+                                onBack = { currentScreen = AppScreen.MAIN },
                                 onLogout = { currentScreen = AppScreen.LOGIN }
                             )
                         }
@@ -208,15 +209,15 @@ fun SmsGatewayScreen(viewModel: SmsViewModel, onOpenSettings: () -> Unit, onLogo
                 title = { Text("BMA Messenger", fontWeight = FontWeight.ExtraBold) },
                 actions = {
                     IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Rounded.Settings, contentDescription = "Settings", tint = Color.White)
+                        Icon(Icons.Rounded.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onBackground)
                     }
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Logout", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Logout", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
-                    titleContentColor = Color.White
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         }
@@ -233,12 +234,12 @@ fun SmsGatewayScreen(viewModel: SmsViewModel, onOpenSettings: () -> Unit, onLogo
                         onClick = { viewModel.cancelAllSms() },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onBackground),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
                     ) {
                         Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(8.dp))
-                        Text("Clear All", fontWeight = FontWeight.Medium, color = Color.White)
+                        Text("Clear All", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onBackground)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -297,11 +298,11 @@ fun ShareDialog(onDismiss: () -> Unit, onSendText: () -> Unit, onSendPdf: () -> 
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.background,
         title = {
-            Text("Share via WhatsApp", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 20.sp)
+            Text("Share via WhatsApp", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
         },
         text = {
             Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 24.dp)) {
-                Text("Do you want to send only the text or attach a PDF?", color = Color.White.copy(alpha = 0.7f))
+                Text("Do you want to send only the text or attach a PDF?", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                 Spacer(Modifier.height(24.dp))
                 Button(
                     onClick = onSendText,
@@ -332,8 +333,8 @@ fun ShareDialog(onDismiss: () -> Unit, onSendText: () -> Unit, onSendPdf: () -> 
             .background(GlassyBlack)
             .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(24.dp)),
         shape = RoundedCornerShape(24.dp),
-        titleContentColor = Color.White,
-        textContentColor = Color.White,
+        titleContentColor = MaterialTheme.colorScheme.onBackground,
+        textContentColor = MaterialTheme.colorScheme.onBackground,
         tonalElevation = 0.dp,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     )
@@ -403,14 +404,6 @@ fun SmsCard(
                         fontWeight = FontWeight.Medium
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                // Display the pending status.
-                Surface(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(text = "Pending", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelMedium, color = Color.White, fontWeight = FontWeight.Medium)
-                }
             }
             Spacer(Modifier.height(16.dp))
             // Display the message body.
@@ -454,12 +447,13 @@ fun SmsCard(
 fun SettingsScreen(viewModel: SmsViewModel, onBack: () -> Unit, onLogout: () -> Unit) {
     var tempUrl by remember { mutableStateOf(viewModel.baseUrl) }
     var tempInterval by remember { mutableStateOf(viewModel.refreshIntervalSeconds.toString()) }
+    var tempDarkModeEnabled by remember { mutableStateOf(viewModel.isDarkModeEnabled) }
     val focusManager = LocalFocusManager.current
 
     // Save the settings and navigate back to the main screen.
     val saveAction = {
         val interval = tempInterval.toLongOrNull() ?: 30L
-        viewModel.saveAndApplySettings(tempUrl, interval)
+        viewModel.saveAndApplySettings(tempUrl, interval, tempDarkModeEnabled)
         onBack()
     }
 
@@ -470,17 +464,17 @@ fun SettingsScreen(viewModel: SmsViewModel, onBack: () -> Unit, onLogout: () -> 
                 title = { Text("Configuration Settings", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 actions = {
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Logout", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = "Logout", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
-                    titleContentColor = Color.White
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         }
@@ -504,6 +498,23 @@ fun SettingsScreen(viewModel: SmsViewModel, onBack: () -> Unit, onLogout: () -> 
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { saveAction() })
             )
+
+            // Toggle to control app theme.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Enable Dark Mode",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold
+                )
+                Switch(
+                    checked = tempDarkModeEnabled,
+                    onCheckedChange = { tempDarkModeEnabled = it }
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -542,24 +553,24 @@ fun SettingTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
     Column {
-        Text(text = label, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(text = label, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Spacer(Modifier.height(8.dp))
         TextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, color = Color.Gray) },
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
             shape = RoundedCornerShape(16.dp),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = GlassyBlack,
-                unfocusedContainerColor = GlassyBlack,
-                disabledContainerColor = GlassyBlack,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                disabledContainerColor = MaterialTheme.colorScheme.surface,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 disabledIndicatorColor = Color.Transparent,
                 cursorColor = MaterialTheme.colorScheme.primary,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             ),
             singleLine = singleLine,
             keyboardOptions = keyboardOptions,
