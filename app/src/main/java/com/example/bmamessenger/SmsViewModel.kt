@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
@@ -293,7 +294,12 @@ class SmsViewModel(private val settingsManager: SettingsManager) : ViewModel() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "The PDF is missing or not generated.", Toast.LENGTH_LONG).show()
+                    val errorMessage = if (e is HttpException) {
+                        "PDF generation failed (${e.code()}). Check document type."
+                    } else {
+                        "The PDF is missing or not generated."
+                    }
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                 }
             }
         }
