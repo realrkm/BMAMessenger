@@ -3,6 +3,17 @@
 BMA Messenger is an Android application for sending SMS messages and sharing PDF documents via WhatsApp (tested on v2.26.5.74). It is built with Jetpack Compose, Retrofit, and Kotlin Coroutines.
 
 ---
+---
+
+## ✨ Features
+
+- **Send SMS** — Send individual or bulk SMS messages directly from the app.
+- **Share PDF** — Generate job card PDFs and share them via WhatsApp.
+- **Pull to Refresh** — Swipe down to reload the list of pending messages.
+- **Configurable Settings** — Set your Anvil base URL and message refresh interval.
+- **Dark Theme** — A clean, modern dark UI built with Material 3.
+
+---
 
 ## 📋 Prerequisites
 
@@ -12,13 +23,14 @@ Before you begin, ensure you have the following:
 |---|---|
 | Android Studio | Ladybug or newer |
 | Android Device | Physical device with an active SIM card |
+| Anvil Works Account | Create account in [Anvil](https://anvil.works) |
 | Python | Version 3.10+ (if running the Uplink locally) |
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Clone the Repository
+### 1. Clone the BMAMessenger Repository
 
 ```bash
 git clone https://github.com/realrkm/bmamessenger.git
@@ -27,7 +39,7 @@ cd BMAMessenger
 
 ### 2. Install the Anvil Uplink (Backend)
 
-The backend is powered by [Anvil](https://anvil.works), a Python-based web app platform. Before installing dependencies, create and activate a virtual environment to keep your project packages isolated.
+The backend is powered by Anvil, a Python-based web app platform. Before installing dependencies, create and activate a virtual environment to keep your project packages isolated.
 
 **Step 1 — Create the virtual environment:**
 
@@ -54,16 +66,16 @@ pip install -r requirements.txt
 > To deactivate the virtual environment when you are done, run `deactivate`.
 
 ### 3. Create A Self Signed HTTPS Certificate
-1) Download mkcert - https://github.com/filosottile/mkcert/releases
+a) Download mkcert - https://github.com/filosottile/mkcert/releases
 
-2) Open CMD and run "mkcert-v1.4.4-windows-amd64.exe YOUR-LAN-IP (e.g. 192.168.1.12)"
+b) Open CMD and run "mkcert-v1.4.4-windows-amd64.exe YOUR-LAN-IP (e.g. 192.168.1.12)"
    NB: 192.168.1.12.pem and 192.168.1.12-key.pem will be created
 
-3) Run "mkcert-v1.4.4-windows-amd64.exe -CAROOT". 
+c) Run "mkcert-v1.4.4-windows-amd64.exe -CAROOT". 
 
-NB. This prints the file path where the local Certificate Authority (CA) files are stored E.G "C:\Users\ADMIN\AppData\Local\mkcert"
+   NB. This prints the file path where the local Certificate Authority (CA) files are stored E.G "C:\Users\ADMIN\AppData\Local\mkcert"
 
-4) Go to C:\Users\ADMIN\AppData\Local\mkcert and rename "rootCA.pem" to "BMAMessenger-rootCA.crt"
+d) Go to C:\Users\ADMIN\AppData\Local\mkcert and rename "rootCA.pem" to "BMAMessenger-rootCA.crt"
 
 ### 4. How To Install a Local Certificate Authority on an Android Phone
 
@@ -113,100 +125,35 @@ Your CA certificate should be listed there.
 ---
 
 
-
-### 5. Launch anvil-app-server
+### 5. Create a .env file next to BMAMessengerBackend.py file. 
+   Populate .env file with the following details(replace the defaults with actual data)
+   DB_HOST=localhost
+   DB_USER=USERNAME
+   DB_PASSWORD=PASSWORD
+   DB_PORT=3306
+   DB_NAME=DATABASENAME 
+   DB_AUTH_PLUGIN=mysql_native_password
+   LOGO=C:\YOUR-FOLDER-PATH\BMAMessenger\venv\Lib\site-packages\BMAMessenger\HeaderLogo.jpg
+   FONT_PATH=C:\YOUR-FOLDER-PATH\BMAMessenger\venv\Lib\site-packages\BMAMessenger\app\src\main\res\font\mozilla_headline.ttf
+   WKHTML_TO_PDF_PATH=C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe
+   
+### 6. Launch Anvil in your machine.
+Locate the file called BMAMessengerBackend.py in BMAMessenger folder and run the file in command prompt.
+Ensure you populate .env file with the correct values and paths.
 ```bash
-anvil-app-server --app BMAMessenger --origin https:
+python BMAMessengerBackend.py
 ```
-### 6. Configure the Android App
+### 7. Configure the Android App
 
 1. Open the project in **Android Studio**.
 2. Wait for **Gradle** to finish syncing all dependencies.
 3. Run the app on your **physical Android device**.
 4. Navigate to **Settings** within the app and enter your Anvil Base URL (e.g., `https://your-app.anvil.app`).
 
-### 7. Grant Permissions
+### 8. Grant Permissions
 
 On first launch, the app will request **SEND_SMS** permission. Tap **Accept** to enable core messaging functionality.
 
----
-
-## ⚙️ Backend API Reference
-
-Add the following endpoints to your **Anvil server module**.
-
----
-
-### `GET /pending-sms` — Fetch Pending Messages
-
-Retrieves all SMS records from the database where `flag = True` (i.e., not yet sent). The Android app calls this on startup and on pull-to-refresh.
-
-```python
-@anvil.server.http_endpoint('/pending-sms', methods=["GET"])
-def get_pending_sms():
-    with db_cursor() as cursor:
-        query = "SELECT id, fullname, phone, message, jobcardrefid FROM tbl_sms WHERE flag = True"
-        cursor.execute(query)
-        rows = cursor.fetchall()
-
-        pending_messages = []
-        for row in rows:
-            pending_messages.append({
-                "id":           row[0] if isinstance(row, tuple) else row['id'],
-                "fullname":     row[1] if isinstance(row, tuple) else row["fullname"],
-                "phone":        row[2] if isinstance(row, tuple) else row['phone'],
-                "message":      row[3] if isinstance(row, tuple) else row['message'],
-                "jobcardrefid": row[4] if isinstance(row, tuple) else row['jobcardrefid'],
-                "flag": True
-            })
-        return pending_messages
-```
-
----
-
-### `POST /mark-sent/:msg_id` — Mark Message as Sent
-
-Updates a specific SMS record in the database, setting `flag = False`. Called by the app immediately after a message is successfully sent.
-
-```python
-@anvil.server.http_endpoint('/mark-sent/:msg_id', methods=["POST"])
-def mark_sms_sent(msg_id, **kwargs):
-    with db_cursor() as cursor:
-        query = "UPDATE tbl_sms SET flag = False WHERE id = %s"
-        cursor.execute(query, (int(msg_id),))
-    return {"status": "success"}
-```
-
----
-
-### `GET /generate-pdf/:jobcardid` — Generate a PDF
-
-Generates and returns a PDF document for the specified job card ID. Called when the user chooses to share a PDF via WhatsApp.
-
-```python
-@anvil.server.http_endpoint('/generate-pdf/:jobcardid', methods=["GET"])
-def generate_pdf(jobcardid, **kwargs):
-    try:
-        job_id_int = int(jobcardid)
-        media_object = createQuotationInvoicePdf(job_id_int, "Invoice")
-        return media_object
-    except ValueError:
-        return anvil.server.HttpResponse(400, "Invalid JobCard ID format.")
-    except Exception as e:
-        return anvil.server.HttpResponse(500, f"PDF Generation failed: {str(e)}")
-```
-
----
-
-## ✨ Features
-
-- **Send SMS** — Send individual or bulk SMS messages directly from the app.
-- **Share PDF** — Generate job card PDFs and share them via WhatsApp.
-- **Pull to Refresh** — Swipe down to reload the list of pending messages.
-- **Configurable Settings** — Set your Anvil base URL and message refresh interval.
-- **Dark Theme** — A clean, modern dark UI built with Material 3.
-
----
 
 ## 📸 Screenshots (Light Mode Vs Dark Mode)
 
