@@ -3,7 +3,6 @@
 BMA Messenger is an Android application for sending SMS messages and sharing PDF documents via WhatsApp (tested on v2.26.5.74). It is built with Jetpack Compose, Retrofit, and Kotlin Coroutines.
 
 ---
----
 
 ## ✨ Features
 
@@ -25,6 +24,7 @@ Before you begin, ensure you have the following:
 | Android Device | Physical device with an active SIM card |
 | Anvil Works Account | Create account in [Anvil](https://anvil.works) |
 | Python | Version 3.10+ (if running the Uplink locally) |
+| wkhtmltopdf | Render HTML to PDF in Windows [Download wkhtmltopdf](https://wkhtmltopdf.org/downloads.html) |
 
 ---
 
@@ -45,7 +45,7 @@ The backend is powered by Anvil, a Python-based web app platform. Before install
 
 | OS | Command |
 |---|---|
-| Windows / macOS / Linux | `python -m venv venv` |
+| Windows | `python -m venv venv` |
 
 **Step 2 — Activate the virtual environment:**
 
@@ -53,7 +53,6 @@ The backend is powered by Anvil, a Python-based web app platform. Before install
 |---|---|
 | Windows (Command Prompt) | `venv\Scripts\activate.bat` |
 | Windows (PowerShell) | `venv\Scripts\Activate.ps1` |
-| macOS / Linux | `source venv/bin/activate` |
 
 > Once activated, your terminal prompt will be prefixed with `(venv)`, confirming the environment is active.
 
